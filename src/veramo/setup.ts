@@ -31,6 +31,11 @@ import { Entities, KeyStore, DIDStore, IDataStoreORM, PrivateKeyStore, migration
 // TypeORM is installed with `@veramo/data-store`
 import { DataSource } from 'typeorm'
 
+import express from 'express';
+import bodyParser from 'body-parser';
+import { Request, Response } from 'express';
+import cors from 'cors';
+
 // This will be the name for the local sqlite database for demo purposes
 const DATABASE_FILE = 'database.sqlite'
 
@@ -40,7 +45,17 @@ const INFURA_PROJECT_ID = '3586660d179141e3801c3895de1c2eba'
 // This will be the secret key for the KMS
 const KMS_SECRET_KEY =
   '11b574d316903ced6cc3f4787bbcc3047d9c72d1da4d83e36fe714ef785d10c1'
+  const app = express();
+  app.use(bodyParser.json());
+  app.use(cors());
 
+  app.get('/', (req:Request, res:Response) => {
+    res.send('Hello World!');
+  });
+  
+  app.listen(3000, () => {
+    console.log('Server running on port 3000.');
+  });
   const dbConnection = new DataSource({
     type: 'sqlite',
     database: DATABASE_FILE,
@@ -82,3 +97,40 @@ const KMS_SECRET_KEY =
       new CredentialPlugin(),
     ],
   })
+
+  app.get('/api/did/list', async (req: Request, res: Response) => {
+    try {
+      const dids = await agent.didManagerFind();
+      res.json(dids);
+    } catch (error:any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+  app.post('/api/did/create/:alias', async (req: Request, res: Response) => {
+    try {
+      const did = await agent.didManagerCreate({ alias: req.body.alias });
+      res.json(did);
+    } catch (error:any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+  app.put('/api/did/update/:did', async (req: Request, res: Response) => {
+    try {
+      // You may need to update the DID document with additional properties or services
+      const didDocument = await agent.resolveDid({ didUrl: req.params.did });
+      res.json(didDocument);
+    } catch (error:any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
+  // Delete DID
+  app.delete('/api/did/delete/:did', async (req: Request, res: Response) => {
+    try {
+      const result = await agent.didManagerDelete({ did: req.params.did });
+      res.json(result);
+    } catch (error:any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
