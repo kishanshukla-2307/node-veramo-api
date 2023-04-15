@@ -1,6 +1,5 @@
-## Veramo Node Tutorial
+## Veramo Node API
 
-Example repo for Veramo Node Tutorial: [https://veramo.io/docs/node_tutorials/node_setup_identifiers](https://veramo.io/docs/node_tutorials/node_setup_identifiers)
 
 ## Usage
 
