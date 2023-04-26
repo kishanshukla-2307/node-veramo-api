@@ -1,8 +1,17 @@
 // Core interfaces
 import { createAgent, IDIDManager, IResolver, IDataStore, IKeyManager, ICredentialPlugin } from '@veramo/core'
 
+import {
+  IDIDManagerCreateArgs,
+  IAgentContext
+} from '@veramo/core-types'
+
+// import { createAgentFromConfig } from '@veramo/cli/src/lib/agentCreator'
+
+import { getAgent } from '@veramo/cli/src/setup'
+
 // Core identity manager plugin
-import { DIDManager } from '@veramo/did-manager'
+import { AbstractIdentifierProvider, DIDManager, MemoryDIDStore } from '@veramo/did-manager'
 
 // Ethr did identity provider
 import { EthrDIDProvider } from '@veramo/did-provider-ethr'
@@ -10,8 +19,15 @@ import { EthrDIDProvider } from '@veramo/did-provider-ethr'
 // Web did identity provider
 import { WebDIDProvider } from '@veramo/did-provider-web'
 
+
+import { Cheqd, CheqdDIDProvider, getResolver as CheqdDIDResolver } from '@cheqd/did-provider-cheqd'
+
+
+// import { NetworkType } from '@cheqd/did-provider-cheqd/src/did-manager/cheqd-did-provider'
+
+
 // Core key manager plugin
-import { KeyManager } from '@veramo/key-manager'
+import { KeyManager, MemoryKeyStore, MemoryPrivateKeyStore } from '@veramo/key-manager'
 
 // Custom key management system for RN
 import { KeyManagementSystem, SecretBox } from '@veramo/kms-local'
@@ -21,9 +37,18 @@ import { CredentialPlugin } from '@veramo/credential-w3c'
 
 // Custom resolvers
 import { DIDResolverPlugin } from '@veramo/did-resolver'
-import { Resolver } from 'did-resolver'
+import { Resolver, ResolverRegistry } from 'did-resolver'
 import { getResolver as ethrDidResolver } from 'ethr-did-resolver'
 import { getResolver as webDidResolver } from 'web-did-resolver'
+
+
+import {
+  DIDDocument
+} from '@cheqd/sdk'
+import {
+  TImportableEd25519Key
+} from '@cheqd/did-provider-cheqd/src/did-manager/cheqd-did-provider'
+
 
 // Storage plugin using TypeOrm
 import { Entities, KeyStore, DIDStore, IDataStoreORM, PrivateKeyStore, migrations } from '@veramo/data-store'
@@ -36,11 +61,20 @@ import bodyParser from 'body-parser';
 import { Request, Response } from 'express';
 import cors from 'cors';
 
+
+export enum NetworkType {
+	Mainnet = "mainnet",
+	Testnet = "testnet"
+}
+
 // This will be the name for the local sqlite database for demo purposes
 const DATABASE_FILE = 'database.sqlite'
 
 // You will need to get a project ID from infura https://www.infura.io
 const INFURA_PROJECT_ID = '3586660d179141e3801c3895de1c2eba'
+
+
+type TExportedDIDDocWithKeys = { didDoc: DIDDocument, keys: TImportableEd25519Key[], versionId?: string }
 
 // This will be the secret key for the KMS
 const KMS_SECRET_KEY =
@@ -66,6 +100,17 @@ const KMS_SECRET_KEY =
     entities: Entities,
   }).initialize()
 
+  type didPayload = {
+    [key: string]: any; 
+  }
+
+  const cheqdDidProvider = new CheqdDIDProvider({
+    defaultKms: 'local',
+    cosmosPayerSeed: 'fuel resist resource daughter mammal chat bench action banana hero shoulder lend',
+    networkType: NetworkType.Testnet,
+    rpcUrl: "https://rpc.cheqd.network"
+  })
+
   export const agent = createAgent<IDIDManager & IKeyManager & IDataStore & IDataStoreORM & IResolver & ICredentialPlugin>({
     plugins: [
       new KeyManager({
@@ -76,7 +121,7 @@ const KMS_SECRET_KEY =
       }),
       new DIDManager({
         store: new DIDStore(dbConnection),
-        defaultProvider: 'did:ethr:goerli',
+        defaultProvider: 'did:cheqd:testnet',
         providers: {
           'did:ethr:goerli': new EthrDIDProvider({
             defaultKms: 'local',
@@ -86,17 +131,93 @@ const KMS_SECRET_KEY =
           'did:web': new WebDIDProvider({
             defaultKms: 'local',
           }),
+          'did:cheqd:testnet': cheqdDidProvider
         },
       }),
       new DIDResolverPlugin({
         resolver: new Resolver({
           ...ethrDidResolver({ infuraProjectId: INFURA_PROJECT_ID }),
           ...webDidResolver(),
+          ...CheqdDIDResolver()
         }),
       }),
       new CredentialPlugin(),
+      new Cheqd({
+        'providers': [
+          new CheqdDIDProvider({
+            defaultKms: 'local',
+            cosmosPayerSeed: 'fuel resist resource daughter mammal chat bench action banana hero shoulder lend',
+            networkType: NetworkType.Testnet,
+            rpcUrl: "https://rpc.cheqd.network"
+          })
+        ]
+      })
     ],
-  })
+    authorizedMethods: [
+      'keyManagerCreate',
+      'keyManagerGet',
+      'keyManagerDelete',
+      'keyManagerImport',
+      'keyManagerEncryptJWE',
+      'keyManagerDecryptJWE',
+      'keyManagerSign',
+      'keyManagerSharedSecret',
+      'keyManagerSignJWT',
+      'keyManagerSignEthTX',
+      'didManagerGetProviders',
+      'didManagerFind',
+      'didManagerGet',
+      'didManagerGetByAlias',
+      'didManagerCreate',
+      'didManagerGetOrCreate',
+      'didManagerUpdate',
+      'didManagerImport',
+      'didManagerDelete',
+      'didManagerAddKey',
+      'didManagerRemoveKey',
+      'didManagerAddService',
+      'didManagerRemoveService',
+      'resolveDid',
+      'getDIDComponentById',
+      'discoverDid',
+      'dataStoreGetMessage',
+      'dataStoreSaveMessage',
+      'dataStoreGetVerifiableCredential',
+      'dataStoreSaveVerifiableCredential',
+      'dataStoreGetVerifiablePresentation',
+      'dataStoreSaveVerifiablePresentation',
+      'dataStoreORMGetIdentifiers',
+      'dataStoreORMGetIdentifiersCount',
+      'dataStoreORMGetMessages',
+      'dataStoreORMGetMessagesCount',
+      'dataStoreORMGetVerifiableCredentialsByClaims',
+      'dataStoreORMGetVerifiableCredentialsByClaimsCount',
+      'dataStoreORMGetVerifiableCredentials',
+      'dataStoreORMGetVerifiableCredentialsCount',
+      'dataStoreORMGetVerifiablePresentations',
+      'dataStoreORMGetVerifiablePresentationsCount',
+      'handleMessage',
+      'packDIDCommMessage',
+      'unpackDIDCommMessage',
+      'sendDIDCommMessage',
+      'sendMessageDIDCommAlpha1',
+      'createVerifiableCredential',
+      'createVerifiablePresentation',
+      'verifyCredential',
+      'verifyPresentation',
+      'createSelectiveDisclosureRequest',
+      'getVerifiableCredentialsForSdr',
+      'validatePresentationAgainstSdr',
+      'cheqdCreateIdentifier',
+      'cheqdUpdateIdentifier',
+      'cheqdDeactivateIdentifier',
+      'cheqdCreateLinkedResource',
+      'cheqdGenerateDidDoc',
+      'cheqdGenerateDidDocWithLinkedResource',
+      'cheqdGenerateIdentityKeys',
+      'cheqdGenerateVersionId'
+    ]
+    })
 
   app.get('/api/did/list', async (req: Request, res: Response) => {
     try {
@@ -108,9 +229,49 @@ const KMS_SECRET_KEY =
   });
   app.post('/api/did/create/:alias', async (req: Request, res: Response) => {
     try {
-      const did = await agent.didManagerCreate({ alias: req.body.alias });
-      res.json(did);
+      const args : IDIDManagerCreateArgs = { alias: req.params.alias } 
+
+      const generatedDID = await agent.execute(
+        'cheqdGenerateDidDoc', 
+        {
+          verificationMethod: 'Ed25519VerificationKey2020',
+          methodSpecificIdAlgo: 'base58btc',
+          network: 'testnet'
+      })
+      console.log(generatedDID['didDoc'])
+
+      const payload : didPayload = {
+        "kms": "local",
+        "alias": args.alias,
+        "document": generatedDID['didDoc'],
+        "versionId": generatedDID['versionId'],
+        "keys": generatedDID['keys']
+      }
+
+      console.log(payload)
+
+      const providers = await agent.didManagerGetProviders()
+      const providerName = providers[2]
+      console.log(providerName)
+
+      // check if already exists
+      if (args.alias !== undefined) {
+        let existingIdentifier
+        try {
+          existingIdentifier = await agent.execute('didManagerGet', { alias: args.alias, provider: providerName })
+        } catch (e) {}
+        if (existingIdentifier) {
+          throw Error(
+            `illegal_argument: Identifier with alias: ${args.alias}, provider: ${providerName} already exists: ${existingIdentifier.did}`,
+          )
+        }
+      }      
+
+      const result = await agent.execute('cheqdCreateIdentifier', {kms: payload['kms'], alias: payload['alias'], document: payload['document'], keys: payload['keys']})
+      console.log(result)
+      res.json(result);
     } catch (error:any) {
+      console.log(error)
       res.status(500).json({ error: error.message });
     }
   });
