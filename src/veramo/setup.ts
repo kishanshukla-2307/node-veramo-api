@@ -286,13 +286,16 @@ const KMS_SECRET_KEY =
       //console.log(didDocument['alias'])
       //res.json({didDocument,output:'Genius'});
 
-      //const dids = await agent.didManagerFind({ d : 'didDocument.didDocument?.id' });
+      //const dids = await agent.didManagerFind({alias:});
       //const dids = await agent.didManagerFind()
+      console.log(didDocument)
       
-      const result  = await agent.execute('cheqdUpdateIdentifier', {did: didDocument.didDocument?.id, document: didDocument,options:{ kms: 'local'}})//} 
+      // ERROR needs to be fixed
+      //const result  = await agent.execute('cheqdUpdateIdentifier', { document: didDocument.didDocument,kms: 'local',keys: ['11b574d316903ced6cc3f4787bbcc3047d9c72d1da4d83e36fe714ef785d10c1']})//} 
+
       console.log('Updation successful')
-      console.log(result)
-      res.json(result);
+      //console.log(result)
+      //res.json(result);
       
     } catch (error:any) {
       res.status(500).json({ error: error.message });
