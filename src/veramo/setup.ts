@@ -229,6 +229,7 @@ const KMS_SECRET_KEY =
   });
   app.post('/api/did/create/:alias', async (req: Request, res: Response) => {
     try {
+      console.log('inside createdDID')
       const args : IDIDManagerCreateArgs = { alias: req.params.alias } 
 
       const generatedDID = await agent.execute(
@@ -275,11 +276,24 @@ const KMS_SECRET_KEY =
       res.status(500).json({ error: error.message });
     }
   });
-  app.put('/api/did/update/:did', async (req: Request, res: Response) => {
+  app.put('/api/did/update/:didToUpdate', async (req: Request, res: Response) => {
     try {
+      console.log(req.body)
       // You may need to update the DID document with additional properties or services
-      const didDocument = await agent.resolveDid({ didUrl: req.params.did });
-      res.json(didDocument);
+
+      const didDocument = await agent.resolveDid({ didUrl: req.params.didToUpdate });
+      //didDocument['@context']="https://w3id.org/did-resolution/v1"
+      //console.log(didDocument['alias'])
+      //res.json({didDocument,output:'Genius'});
+
+      //const dids = await agent.didManagerFind({ d : 'didDocument.didDocument?.id' });
+      //const dids = await agent.didManagerFind()
+      
+      const result  = await agent.execute('cheqdUpdateIdentifier', {did: didDocument.didDocument?.id, document: didDocument,options:{ kms: 'local'}})//} 
+      console.log('Updation successful')
+      console.log(result)
+      res.json(result);
+      
     } catch (error:any) {
       res.status(500).json({ error: error.message });
     }
