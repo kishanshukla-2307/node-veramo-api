@@ -1,6 +1,6 @@
 # Veramo Node API 
 
-## Quick setup
+## ✅ Quick setup
 
 Before starting the node server, run the below command to install all the dependencies needed.
 
@@ -11,29 +11,29 @@ Once the dependencies are installed, we are ready to start the node server.
 ### `yarn ts-node --esm ./src/list-identifier.ts`
 
 This command starts the node server at port 3000 and exposes the following functionalities...
-    - list did
-    - created did
-    - update did
-    - delete did
+####    - list did
+####    - created did
+####    - update did
+####    - delete did
 
-## Functionalities
+## ✅ Functionalities
 
-### localhost:3000/api/did/list
+### - localhost:3000/api/did/list
 
 A get request to the above endpoint will list downs all the did's created
 
-### localhost:3000/api/did/create/:alias
+### - localhost:3000/api/did/create/:alias
 
 A post request to the above endpoint will create a did.
 
-### localhost:3000/api/did/update/:didToUpdate
+### - localhost:3000/api/did/update/:didToUpdate
 
 A put request to the above endpoint will update the did 
 
 
 # Did Management App 
 
-## Quick setup
+## ✅ Quick setup
 
 Run the following command to install the required dependencies
 
@@ -44,10 +44,10 @@ Once the dependencies are installed, we can start the react server.
 ### `npm start`
 
 This starts the react server and gives us an UI to interact with the chain. Following are the functionalities provided by the UI...
-    - Did List
-    - Did Management
+####    - Did List
+####    - Did Management
 
-## Functionalities
+## ✅ Functionalities
 
 ### DID list
 
