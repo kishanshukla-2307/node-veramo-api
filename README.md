@@ -1,4 +1,4 @@
-# Veramo Node API 
+# 🆔 Veramo Node API 
 
 ## ✅ Quick setup
 
@@ -18,20 +18,20 @@ This command starts the node server at port 3000 and exposes the following funct
 
 ## ✅ Functionalities
 
-### - localhost:3000/api/did/list
+#### - localhost:3000/api/did/list
 
-A get request to the above endpoint will list downs all the did's created
+A get request to the above endpoint will list down all the did's created
 
-### - localhost:3000/api/did/create/:alias
+#### - localhost:3000/api/did/create/:alias
 
 A post request to the above endpoint will create a did.
 
-### - localhost:3000/api/did/update/:didToUpdate
+#### - localhost:3000/api/did/update/:didToUpdate
 
-A put request to the above endpoint will update the did 
+A put request to the above endpoint will update the did.
 
 
-# Did Management App 
+# 🆔 Did Management App 
 
 ## ✅ Quick setup
 
