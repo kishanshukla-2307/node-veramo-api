@@ -291,7 +291,7 @@ const KMS_SECRET_KEY =
       console.log(didDocument)
       
       // ----------------------------------ERROR needs to be fixed
-      const result  = await agent.execute('cheqdUpdateIdentifier', { document: didDocument.didDocument,kms: 'local',keys: ['11b574d316903ced6cc3f4787bbcc3047d9c72d1da4d83e36fe714ef785d10c1']})//} 
+      const result  = await agent.execute('cheqdUpdateIdentifier', { document: didDocument.didDocument,kms: 'local',keys: ''})//} 
 
       console.log('Updation successful')
       //console.log(result)
