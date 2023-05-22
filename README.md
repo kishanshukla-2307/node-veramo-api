@@ -11,9 +11,9 @@ It displays all the did's with the controller and the time of creation.
 This provides an UI for managing the did's.
 It provides an easy way of creating a did using an alias name. Further the update functionality can be used from this did management UI to make further changes.
 
-#### Resolving DID using Cosmos-cash-resolver
+#### Resolving DID 
 
-Given the key/address, Did resolution is performed using the Cosmos-cash-resolver. This generates the DID Document which contains the did, verification method, publicKeyMultibase. This also generates the DID Document Metadata and the DID Resolution Metadata.
+Given the key/address, Did resolution is performed using the corresponding provider based on the did. This generates the DID Document which contains the did, verification method, publicKeyMultibase. This also generates the DID Document Metadata and the DID Resolution Metadata.
 
 ## ✅ Quick setup
 
@@ -53,7 +53,7 @@ Before starting the node server, run the below command to install all the depend
 
 Once the dependencies are installed, we are ready to start the node server.
 
-### `yarn ts-node --esm ./src/list-identifier.ts`
+### `yarn ts-node --esm ./src/create-identifier.ts`
 
 This command starts the node server at port 3000 and exposes the following functionalities...
 ####    - list did

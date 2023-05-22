@@ -41,6 +41,8 @@ import { Resolver, ResolverRegistry } from 'did-resolver'
 import { getResolver as ethrDidResolver } from 'ethr-did-resolver'
 import { getResolver as webDidResolver } from 'web-did-resolver'
 
+import { getResolver as CosmoscashDIDResolver } from '../veramo/cosmoscash-did-resolver.ts'
+
 
 import {
   DIDDocument
@@ -63,8 +65,8 @@ import cors from 'cors';
 
 
 export enum NetworkType {
-	Mainnet = "mainnet",
-	Testnet = "testnet"
+  Mainnet = "mainnet",
+  Testnet = "testnet"
 }
 
 // This will be the name for the local sqlite database for demo purposes
@@ -79,219 +81,230 @@ type TExportedDIDDocWithKeys = { didDoc: DIDDocument, keys: TImportableEd25519Ke
 // This will be the secret key for the KMS
 const KMS_SECRET_KEY =
   '11b574d316903ced6cc3f4787bbcc3047d9c72d1da4d83e36fe714ef785d10c1'
-  const app = express();
-  app.use(bodyParser.json());
-  app.use(cors());
+const app = express();
+app.use(bodyParser.json());
+app.use(cors());
 
-  app.get('/', (req:Request, res:Response) => {
-    res.send('Hello World!');
-  });
-  
-  app.listen(3000, () => {
-    console.log('Server running on port 3000.');
-  });
-  const dbConnection = new DataSource({
-    type: 'sqlite',
-    database: DATABASE_FILE,
-    synchronize: false,
-    migrations,
-    migrationsRun: true,
-    logging: ['error', 'info', 'warn'],
-    entities: Entities,
-  }).initialize()
+app.get('/', (req: Request, res: Response) => {
+  res.send('Hello World!');
+});
 
-  type didPayload = {
-    [key: string]: any; 
-  }
+app.listen(3000, () => {
+  console.log('Server running on port 3000.');
+});
+const dbConnection = new DataSource({
+  type: 'sqlite',
+  database: DATABASE_FILE,
+  synchronize: false,
+  migrations,
+  migrationsRun: true,
+  logging: ['error', 'info', 'warn'],
+  entities: Entities,
+}).initialize()
 
-  const cheqdDidProvider = new CheqdDIDProvider({
-    defaultKms: 'local',
-    cosmosPayerSeed: 'fuel resist resource daughter mammal chat bench action banana hero shoulder lend',
-    networkType: NetworkType.Testnet,
-    rpcUrl: "https://rpc.cheqd.network"
-  })
+type didPayload = {
+  [key: string]: any;
+}
 
-  export const agent = createAgent<IDIDManager & IKeyManager & IDataStore & IDataStoreORM & IResolver & ICredentialPlugin>({
-    plugins: [
-      new KeyManager({
-        store: new KeyStore(dbConnection),
-        kms: {
-          local: new KeyManagementSystem(new PrivateKeyStore(dbConnection, new SecretBox(KMS_SECRET_KEY))),
-        },
-      }),
-      new DIDManager({
-        store: new DIDStore(dbConnection),
-        defaultProvider: 'did:cheqd:testnet',
-        providers: {
-          'did:ethr:goerli': new EthrDIDProvider({
-            defaultKms: 'local',
-            network: 'goerli',
-            rpcUrl: 'https://goerli.infura.io/v3/' + INFURA_PROJECT_ID,
-          }),
-          'did:web': new WebDIDProvider({
-            defaultKms: 'local',
-          }),
-          'did:cheqd:testnet': cheqdDidProvider
-        },
-      }),
-      new DIDResolverPlugin({
-        resolver: new Resolver({
-          ...ethrDidResolver({ infuraProjectId: INFURA_PROJECT_ID }),
-          ...webDidResolver(),
-          ...CheqdDIDResolver()
+const cheqdDidProvider = new CheqdDIDProvider({
+  defaultKms: 'local',
+  cosmosPayerSeed: 'fuel resist resource daughter mammal chat bench action banana hero shoulder lend',
+  //networkType: NetworkType.Testnet,
+  rpcUrl: "https://rpc.cheqd.network"
+})
+
+export const agent = createAgent<IDIDManager & IKeyManager & IDataStore & IDataStoreORM & IResolver & ICredentialPlugin>({
+  plugins: [
+    new KeyManager({
+      store: new KeyStore(dbConnection),
+      kms: {
+        local: new KeyManagementSystem(new PrivateKeyStore(dbConnection, new SecretBox(KMS_SECRET_KEY))),
+      },
+    }),
+    new DIDManager({
+      store: new DIDStore(dbConnection),
+      defaultProvider: 'did:cheqd:testnet',
+      providers: {
+        'did:ethr:goerli': new EthrDIDProvider({
+          defaultKms: 'local',
+          network: 'goerli',
+          rpcUrl: 'https://goerli.infura.io/v3/' + INFURA_PROJECT_ID,
         }),
+        'did:web': new WebDIDProvider({
+          defaultKms: 'local',
+        }),
+        'did:cheqd:testnet': cheqdDidProvider
+      },
+    }),
+    new DIDResolverPlugin({
+      resolver: new Resolver({
+        ...ethrDidResolver({ infuraProjectId: INFURA_PROJECT_ID }),
+        ...webDidResolver(),
+        ...CheqdDIDResolver(),
+        ...CosmoscashDIDResolver()
       }),
-      new CredentialPlugin(),
-      new Cheqd({
-        'providers': [
-          new CheqdDIDProvider({
-            defaultKms: 'local',
-            cosmosPayerSeed: 'fuel resist resource daughter mammal chat bench action banana hero shoulder lend',
-            networkType: NetworkType.Testnet,
-            rpcUrl: "https://rpc.cheqd.network"
-          })
-        ]
-      })
-    ],
-    authorizedMethods: [
-      'keyManagerCreate',
-      'keyManagerGet',
-      'keyManagerDelete',
-      'keyManagerImport',
-      'keyManagerEncryptJWE',
-      'keyManagerDecryptJWE',
-      'keyManagerSign',
-      'keyManagerSharedSecret',
-      'keyManagerSignJWT',
-      'keyManagerSignEthTX',
-      'didManagerGetProviders',
-      'didManagerFind',
-      'didManagerGet',
-      'didManagerGetByAlias',
-      'didManagerCreate',
-      'didManagerGetOrCreate',
-      'didManagerUpdate',
-      'didManagerImport',
-      'didManagerDelete',
-      'didManagerAddKey',
-      'didManagerRemoveKey',
-      'didManagerAddService',
-      'didManagerRemoveService',
-      'resolveDid',
-      'getDIDComponentById',
-      'discoverDid',
-      'dataStoreGetMessage',
-      'dataStoreSaveMessage',
-      'dataStoreGetVerifiableCredential',
-      'dataStoreSaveVerifiableCredential',
-      'dataStoreGetVerifiablePresentation',
-      'dataStoreSaveVerifiablePresentation',
-      'dataStoreORMGetIdentifiers',
-      'dataStoreORMGetIdentifiersCount',
-      'dataStoreORMGetMessages',
-      'dataStoreORMGetMessagesCount',
-      'dataStoreORMGetVerifiableCredentialsByClaims',
-      'dataStoreORMGetVerifiableCredentialsByClaimsCount',
-      'dataStoreORMGetVerifiableCredentials',
-      'dataStoreORMGetVerifiableCredentialsCount',
-      'dataStoreORMGetVerifiablePresentations',
-      'dataStoreORMGetVerifiablePresentationsCount',
-      'handleMessage',
-      'packDIDCommMessage',
-      'unpackDIDCommMessage',
-      'sendDIDCommMessage',
-      'sendMessageDIDCommAlpha1',
-      'createVerifiableCredential',
-      'createVerifiablePresentation',
-      'verifyCredential',
-      'verifyPresentation',
-      'createSelectiveDisclosureRequest',
-      'getVerifiableCredentialsForSdr',
-      'validatePresentationAgainstSdr',
-      'cheqdCreateIdentifier',
-      'cheqdUpdateIdentifier',
-      'cheqdDeactivateIdentifier',
-      'cheqdCreateLinkedResource',
-      'cheqdGenerateDidDoc',
-      'cheqdGenerateDidDocWithLinkedResource',
-      'cheqdGenerateIdentityKeys',
-      'cheqdGenerateVersionId'
-    ]
+    }),
+    new CredentialPlugin(),
+    new Cheqd({
+      'providers': [
+        new CheqdDIDProvider({
+          defaultKms: 'local',
+          cosmosPayerSeed: 'fuel resist resource daughter mammal chat bench action banana hero shoulder lend',
+          //networkType: NetworkType.Testnet,
+          rpcUrl: "https://rpc.cheqd.network"
+        })
+      ]
     })
+  ],
+  authorizedMethods: [
+    'keyManagerCreate',
+    'keyManagerGet',
+    'keyManagerDelete',
+    'keyManagerImport',
+    'keyManagerEncryptJWE',
+    'keyManagerDecryptJWE',
+    'keyManagerSign',
+    'keyManagerSharedSecret',
+    'keyManagerSignJWT',
+    'keyManagerSignEthTX',
+    'didManagerGetProviders',
+    'didManagerFind',
+    'didManagerGet',
+    'didManagerGetByAlias',
+    'didManagerCreate',
+    'didManagerGetOrCreate',
+    'didManagerUpdate',
+    'didManagerImport',
+    'didManagerDelete',
+    'didManagerAddKey',
+    'didManagerRemoveKey',
+    'didManagerAddService',
+    'didManagerRemoveService',
+    'resolveDid',
+    'getDIDComponentById',
+    'discoverDid',
+    'dataStoreGetMessage',
+    'dataStoreSaveMessage',
+    'dataStoreGetVerifiableCredential',
+    'dataStoreSaveVerifiableCredential',
+    'dataStoreGetVerifiablePresentation',
+    'dataStoreSaveVerifiablePresentation',
+    'dataStoreORMGetIdentifiers',
+    'dataStoreORMGetIdentifiersCount',
+    'dataStoreORMGetMessages',
+    'dataStoreORMGetMessagesCount',
+    'dataStoreORMGetVerifiableCredentialsByClaims',
+    'dataStoreORMGetVerifiableCredentialsByClaimsCount',
+    'dataStoreORMGetVerifiableCredentials',
+    'dataStoreORMGetVerifiableCredentialsCount',
+    'dataStoreORMGetVerifiablePresentations',
+    'dataStoreORMGetVerifiablePresentationsCount',
+    'handleMessage',
+    'packDIDCommMessage',
+    'unpackDIDCommMessage',
+    'sendDIDCommMessage',
+    'sendMessageDIDCommAlpha1',
+    'createVerifiableCredential',
+    'createVerifiablePresentation',
+    'verifyCredential',
+    'verifyPresentation',
+    'createSelectiveDisclosureRequest',
+    'getVerifiableCredentialsForSdr',
+    'validatePresentationAgainstSdr',
+    'cheqdCreateIdentifier',
+    'cheqdUpdateIdentifier',
+    'cheqdDeactivateIdentifier',
+    'cheqdCreateLinkedResource',
+    'cheqdGenerateDidDoc',
+    'cheqdGenerateDidDocWithLinkedResource',
+    'cheqdGenerateIdentityKeys',
+    'cheqdGenerateVersionId'
+  ]
+})
 
-  app.get('/api/did/list', async (req: Request, res: Response) => {
-    try {
-      const dids = await agent.didManagerFind();
-      res.json(dids);
-    } catch (error:any) {
-      res.status(500).json({ error: error.message });
-    }
-  });
-  app.post('/api/did/create/:alias', async (req: Request, res: Response) => {
-    try {
-      const args : IDIDManagerCreateArgs = { alias: req.params.alias } 
+app.get('/api/did/list', async (req: Request, res: Response) => {
+  try {
+    const dids = await agent.didManagerFind();
+    res.json(dids);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
-      const generatedDID = await agent.execute(
-        'cheqdGenerateDidDoc', 
-        {
-          verificationMethod: 'Ed25519VerificationKey2020',
-          methodSpecificIdAlgo: 'base58btc',
-          network: 'testnet'
+app.get('/api/did/resolve/:alias1', async (req: Request, res: Response) => {
+  try {
+    const didDocument = await agent.resolveDid({ didUrl: req.params.alias1 });
+    res.json(didDocument);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
+app.post('/api/did/create/:alias', async (req: Request, res: Response) => {
+  try {
+    const args: IDIDManagerCreateArgs = { alias: req.params.alias }
+
+    const generatedDID = await agent.execute(
+      'cheqdGenerateDidDoc',
+      {
+        verificationMethod: 'Ed25519VerificationKey2020',
+        methodSpecificIdAlgo: 'base58btc',
+        network: 'testnet'
       })
-      console.log(generatedDID['didDoc'])
+    console.log(generatedDID['didDoc'])
 
-      const payload : didPayload = {
-        "kms": "local",
-        "alias": args.alias,
-        "document": generatedDID['didDoc'],
-        "versionId": generatedDID['versionId'],
-        "keys": generatedDID['keys']
+    const payload: didPayload = {
+      "kms": "local",
+      "alias": args.alias,
+      "document": generatedDID['didDoc'],
+      "versionId": generatedDID['versionId'],
+      "keys": generatedDID['keys']
+    }
+
+    console.log(payload)
+
+    const providers = await agent.didManagerGetProviders()
+    const providerName = providers[2]
+    console.log(providerName)
+
+    // check if already exists
+    if (args.alias !== undefined) {
+      let existingIdentifier
+      try {
+        existingIdentifier = await agent.execute('didManagerGet', { alias: args.alias, provider: providerName })
+      } catch (e) { }
+      if (existingIdentifier) {
+        throw Error(
+          `illegal_argument: Identifier with alias: ${args.alias}, provider: ${providerName} already exists: ${existingIdentifier.did}`,
+        )
       }
-
-      console.log(payload)
-
-      const providers = await agent.didManagerGetProviders()
-      const providerName = providers[2]
-      console.log(providerName)
-
-      // check if already exists
-      if (args.alias !== undefined) {
-        let existingIdentifier
-        try {
-          existingIdentifier = await agent.execute('didManagerGet', { alias: args.alias, provider: providerName })
-        } catch (e) {}
-        if (existingIdentifier) {
-          throw Error(
-            `illegal_argument: Identifier with alias: ${args.alias}, provider: ${providerName} already exists: ${existingIdentifier.did}`,
-          )
-        }
-      }      
-
-      const result = await agent.execute('cheqdCreateIdentifier', {kms: payload['kms'], alias: payload['alias'], document: payload['document'], keys: payload['keys']})
-      console.log(result)
-      res.json(result);
-    } catch (error:any) {
-      console.log(error)
-      res.status(500).json({ error: error.message });
     }
-  });
-  app.put('/api/did/update/:did', async (req: Request, res: Response) => {
-    try {
-      // You may need to update the DID document with additional properties or services
-      const didDocument = await agent.resolveDid({ didUrl: req.params.did });
-      res.json(didDocument);
-    } catch (error:any) {
-      res.status(500).json({ error: error.message });
-    }
-  });
-  
-  // Delete DID
-  app.delete('/api/did/delete/:did', async (req: Request, res: Response) => {
-    try {
-      const result = await agent.didManagerDelete({ did: req.params.did });
-      res.json(result);
-    } catch (error:any) {
-      res.status(500).json({ error: error.message });
-    }
-  });
-  
+
+    const result = await agent.execute('cheqdCreateIdentifier', { kms: payload['kms'], alias: payload['alias'], document: payload['document'], keys: payload['keys'] })
+    console.log(result)
+    res.json(result);
+  } catch (error: any) {
+    console.log(error)
+    res.status(500).json({ error: error.message });
+  }
+});
+app.put('/api/did/update/:did', async (req: Request, res: Response) => {
+  try {
+    // You may need to update the DID document with additional properties or services
+    const didDocument = await agent.resolveDid({ didUrl: req.params.did });
+    res.json(didDocument);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete DID
+app.delete('/api/did/delete/:did', async (req: Request, res: Response) => {
+  try {
+    const result = await agent.didManagerDelete({ did: req.params.did });
+    res.json(result);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
