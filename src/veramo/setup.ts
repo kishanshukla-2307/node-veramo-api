@@ -240,11 +240,12 @@ app.get('/api/did/resolve/:alias1', async (req: Request, res: Response) => {
   }
 });
 
-app.get('/api/did/createVC/:vc_did1', async (req: Request, res: Response) => {
+app.get('/api/did/createVC/:vc_did1/:vc_did', async (req: Request, res: Response) => {
   try {
     // const didDocument = await agent.resolveDid({ didUrl: req.params.vc_did });
     // res.json(didDocument);
-    const identifier = await agent.didManagerGet({ did: 'did:cheqd:testnet:67PkBmAoEqt2MnEu69dg5F' })
+    console.log(req.params)
+    const identifier = await agent.didManagerGet({ did: req.params.vc_did })
     const verifiableCredential = await agent.createVerifiableCredential({
       credential: {
         issuer: { id: identifier.did },
