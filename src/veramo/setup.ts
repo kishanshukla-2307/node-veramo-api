@@ -240,6 +240,33 @@ app.get('/api/did/resolve/:alias1', async (req: Request, res: Response) => {
   }
 });
 
+app.get('/api/did/createVC/:vc_did1', async (req: Request, res: Response) => {
+  try {
+    // const didDocument = await agent.resolveDid({ didUrl: req.params.vc_did });
+    // res.json(didDocument);
+    const identifier = await agent.didManagerGet({ did: 'did:cheqd:testnet:67PkBmAoEqt2MnEu69dg5F' })
+    const verifiableCredential = await agent.createVerifiableCredential({
+      credential: {
+        issuer: { id: identifier.did },
+        credentialSubject: {
+          id: req.params.vc_did1,
+          you: 'alice',
+        },
+      },
+      proofFormat: 'jwt',
+    })
+    console.log(`New credential created`)
+    console.log(JSON.stringify(verifiableCredential, null, 2))
+    //const result = await agent.verifyCredential({ credential: verifiableCredential })
+    //console.log(result)
+    res.json(verifiableCredential)
+
+
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 
 app.post('/api/did/create/:alias', async (req: Request, res: Response) => {
   try {
