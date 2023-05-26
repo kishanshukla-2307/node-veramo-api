@@ -15,6 +15,10 @@ It provides an easy way of creating a did using an alias name. Further the updat
 
 Given the key/address, Did resolution is performed using the corresponding provider based on the did. This generates the DID Document which contains the did, verification method, publicKeyMultibase. This also generates the DID Document Metadata and the DID Resolution Metadata.
 
+### Creating Verfiable Credentials
+
+Given the did (did:cheqd) it creates a verfiable credential using veramo's "credentials-w3c" plugin.
+
 ## ✅ Quick setup
 
 ### For cosmos-cash reolution only 
