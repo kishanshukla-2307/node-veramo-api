@@ -1,0 +1,33 @@
+syntax = "proto3";
+package allinbits.cosmoscash.did;
+
+import "google/api/annotations.proto";
+import "did/did.proto";
+import "gogoproto/gogo.proto";
+// this line is used by starport scaffolding # 1
+
+option go_package = "github.com/allinbits/cosmos-cash-resolver/x/did/types";
+
+// this line is used by starport scaffolding # 1
+
+// Query defines the gRPC querier service.
+service Query {
+  // DidDocument queries a did documents with an id.
+  rpc DidDocument(QueryDidDocumentRequest) returns (QueryDidDocumentResponse) {
+    option (google.api.http).get = "/allinbits/did/dids/{id}";
+  }
+}
+
+// QueryDidDocumentsRequest is request type for Query/DidDocuments RPC method.
+message QueryDidDocumentRequest {
+  // status enables to query for validators matching a given status.
+  string id = 1;
+}
+
+// QueryDidDocumentsResponse is response type for the Query/DidDocuments RPC method
+message QueryDidDocumentResponse {
+  // validators contains all the queried validators.
+  DidDocument didDocument = 1  [(gogoproto.nullable) = false];
+  DidMetadata didMetadata = 2  [(gogoproto.nullable) = false];
+}
+// this line is used by starport scaffolding # 3
